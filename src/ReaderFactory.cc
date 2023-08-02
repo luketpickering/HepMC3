@@ -8,23 +8,23 @@
 #include "HepMC3/ReaderHEPEVT.h"
 #include "HepMC3/ReaderLHEF.h"
 #include "HepMC3/ReaderPlugin.h"
+#include "HepMC3/ReaderFactory_fwd.h"
 
 namespace HepMC3 {
 InputInfo::InputInfo (const std::string &filename) {
 
+    m_remote = false;
+    m_pipe = false;
+    m_error = false;
+    m_init = false;
+    m_root = false;
+    m_protobuf = false;
+    m_asciiv3 = false;
+    m_iogenevent = false;
+    m_lhef = false;
+    m_hepevt = false;
 
-     m_remote = false;
-     m_pipe = false;
-     m_error = false;
-     m_init = false;
-      m_root = false;
-      m_protobuf = false;
-      m_asciiv3=false;
-      m_iogenevent=false;
-      m_lhef=false;
-      m_hepevt=false;
-    
-    
+
     if (filename.find("http://") != std::string::npos)    m_remote = true;
     if (filename.find("https://") != std::string::npos)   m_remote = true;
     if (filename.find("root://") != std::string::npos)    m_remote = true;
@@ -64,11 +64,11 @@ InputInfo::InputInfo (const std::string &filename) {
 
 #if defined(__linux__) || defined(__darwin__)|| defined(__APPLE__) || defined(__FreeBSD__) || defined(__sun)
         m_pipe = S_ISFIFO(buffer.st_mode);
-        if (pipe) {
+        if (m_pipe) {
             HEPMC3_DEBUG(10, "deduce_reader: the file " << filename << " is a pipe");
             m_reader = deduce_reader(file);
             m_init = true;
-            return;            
+            return;
         }
 #endif
 
@@ -77,47 +77,41 @@ InputInfo::InputInfo (const std::string &filename) {
         while (std::getline( *(file.get()), line) && nonempty < 3) {
             if (line.empty()) continue;
             nonempty++;
-           m_head.push_back(line);
+            m_head.push_back(line);
         }
         file->close();
     }
     // Assure there are at least two elements in the vector:
     m_head.push_back("");
     m_head.push_back("");
-    
-    if ( strncmp(input.m_head.at(0).c_str(), "root", 4) == 0 ) m_root = true;
-     if ( strncmp(input.m_head.at(0).c_str(),"hmpb",4) == 0 ) m_protobuf = true;
-    if ( strncmp(input.m_head.at(0).c_str(),"HepMC::Version",14) == 0 && strncmp(input.m_head.at(1).c_str(), "HepMC::Asciiv3", 14) == 0 ) m_asciiv3=true;
-    if ( strncmp(input.m_head.at(0).c_str(),"HepMC::Version",14) == 0 && strncmp(input.m_head.at(1).c_str(), "HepMC::IO_GenEvent", 18) == 0 ) m_iogenevent=true;
-     if ( strncmp(input.m_head.at(0).c_str(), "<LesHouchesEvents", 17) == 0) m_lhef=true;
-    
-    
-            std::stringstream st_e(input.m_head.at(0).c_str());
-        char attr = ' ';
-        bool HEPEVT = true;
-        int m_i,m_p;
-        while (true)
-        {
-            if (!(st_e >> attr)) {
-                HEPEVT=false;
-                break;
-            }
-            if (attr == ' ') continue;
-            if (attr != 'E') {
-                HEPEVT = false;
-                break;
-            }
-            HEPEVT=static_cast<bool>(st_e >> m_i >> m_p);
+
+    if ( strncmp(m_head.at(0).c_str(), "root", 4) == 0 ) m_root = true;
+    if ( strncmp(m_head.at(0).c_str(),"hmpb",4) == 0 ) m_protobuf = true;
+    if ( strncmp(m_head.at(0).c_str(),"HepMC::Version",14) == 0 && strncmp(m_head.at(1).c_str(), "HepMC::Asciiv3", 14) == 0 ) m_asciiv3=true;
+    if ( strncmp(m_head.at(0).c_str(),"HepMC::Version",14) == 0 && strncmp(m_head.at(1).c_str(), "HepMC::IO_GenEvent", 18) == 0 ) m_iogenevent=true;
+    if ( strncmp(m_head.at(0).c_str(), "<LesHouchesEvents", 17) == 0) m_lhef=true;
+
+    std::stringstream st_e(m_head.at(0).c_str());
+    char attr = ' ';
+    bool HEPEVT = true;
+    int m_i,m_p;
+    while (true)
+    {
+        if (!(st_e >> attr)) {
+            HEPEVT=false;
             break;
         }
-        if (HEPEVT )m_hepevt=true;
-    
-    
-    
+        if (attr == ' ') continue;
+        if (attr != 'E') {
+            HEPEVT = false;
+            break;
+        }
+        HEPEVT=static_cast<bool>(st_e >> m_i >> m_p);
+        break;
+    }
+    if (HEPEVT )m_hepevt=true;
     m_init = true;
-
 }
-
 
 
 /** @brief This function will deduce the type of input stream based on its content and will return appropriate Reader*/

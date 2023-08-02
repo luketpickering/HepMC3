@@ -11,7 +11,7 @@
 #include "HepMC3/CompressedIO.h"
 
 namespace HepMC3 {
-	
+
 /**
  * @brief This function deduces the type of input file based on the name/URL
  * and its content, and will return an appropriate Reader object
@@ -33,8 +33,8 @@ inline std::shared_ptr<Reader> deduce_reader(const std::string &filename)
     snprintf(buf,6,"%s",input.m_head.at(0).c_str());
     Compression det = detect_compression_type(buf, buf + 6);
     if ( det != Compression::plaintext ) {
-            HEPMC3_DEBUG(10, "Detected supported compression " << std::to_string(det));
-            return deduce_reader(std::shared_ptr< std::istream >(new ifstream(filename.c_str())));
+        HEPMC3_DEBUG(10, "Detected supported compression " << std::to_string(det));
+        return deduce_reader(std::shared_ptr< std::istream >(new ifstream(filename.c_str())));
     }
 #endif
     HEPMC3_DEBUG(10, "Attempt ReaderAscii for " << filename);
