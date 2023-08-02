@@ -34,7 +34,9 @@ const std::string libHepMC3rootIO = "HepMC3rootIO.dll";
 
 class InputInfo {
 public:
+    InputInfo() {};
     InputInfo(const std::string &filename);
+    void classify();
     std::vector<std::string> m_head;
     bool m_remote;
     bool m_pipe;

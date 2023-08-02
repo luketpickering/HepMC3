@@ -85,6 +85,11 @@ InputInfo::InputInfo (const std::string &filename) {
     m_head.push_back("");
     m_head.push_back("");
 
+    classify();
+    m_init = true;
+}
+void InputInfo::classify() {
+
     if ( strncmp(m_head.at(0).c_str(), "root", 4) == 0 ) m_root = true;
     if ( strncmp(m_head.at(0).c_str(),"hmpb",4) == 0 ) m_protobuf = true;
     if ( strncmp(m_head.at(0).c_str(),"HepMC::Version",14) == 0 && strncmp(m_head.at(1).c_str(), "HepMC::Asciiv3", 14) == 0 ) m_asciiv3=true;
@@ -110,7 +115,7 @@ InputInfo::InputInfo (const std::string &filename) {
         break;
     }
     if (HEPEVT )m_hepevt=true;
-    m_init = true;
+
 }
 
 
@@ -151,49 +156,24 @@ std::shared_ptr<Reader> deduce_reader(std::istream &stream)
         HEPMC3_WARNING("Input stream is too short or invalid.");
         return std::shared_ptr<Reader>(nullptr);
     }
-
-    if ( strncmp(head.at(0).c_str(),"hmpb",4) == 0 )
-    {
-        return std::make_shared<ReaderPlugin>(stream,libHepMC3protobufIO,std::string("newReaderprotobufstream"));
+    InputInfo input;
+    input.m_head=head;
+    input.classify();
+    if (input.m_protobuf) {
+        return std::make_shared<ReaderPlugin>(stream,libHepMC3protobufIO,std::string("newReaderprotobuffile"));
     }
-
-    if ( strncmp(head.at(0).c_str(), "HepMC::Version", 14) == 0 && strncmp(head.at(1).c_str(), "HepMC::Asciiv3", 14) == 0 )
-    {
-        HEPMC3_DEBUG(10, "Attempt ReaderAscii");
+    if (input.m_asciiv3) {
         return std::shared_ptr<Reader>((Reader*) ( new ReaderAscii(stream)));
     }
-
-    if ( strncmp(head.at(0).c_str(), "HepMC::Version", 14) == 0 && strncmp(head.at(1).c_str(), "HepMC::IO_GenEvent", 18) == 0 )
-    {
-        HEPMC3_DEBUG(10, "Attempt ReaderAsciiHepMC2");
+    if ( input.m_iogenevent) {
         return std::shared_ptr<Reader>((Reader*) ( new ReaderAsciiHepMC2(stream)));
     }
-
-    if ( strncmp(head.at(0).c_str(), "<LesHouchesEvents", 17) == 0)
-    {
-        HEPMC3_DEBUG(10, "Attempt ReaderLHEF");
+    if ( input.m_lhef) {
         return std::shared_ptr<Reader>((Reader*) ( new ReaderLHEF(stream)));
     }
-    HEPMC3_DEBUG(10, "Attempt ReaderHEPEVT");
-    std::stringstream st_e(head.at(0).c_str());
-    char attr = ' ';
-    bool HEPEVT = true;
-    int m_i, m_p;
-    while (true)
-    {
-        if (!(st_e >> attr)) {
-            HEPEVT = false;
-            break;
-        }
-        if (attr == ' ') continue;
-        if (attr != 'E') {
-            HEPEVT = false;
-            break;
-        }
-        HEPEVT = static_cast<bool>(st_e >> m_i >> m_p);
-        break;
+    if ( input.m_hepevt)  {
+        return std::shared_ptr<Reader>((Reader*) ( new ReaderHEPEVT(stream)));
     }
-    if (HEPEVT) return std::shared_ptr<Reader>((Reader*) ( new ReaderHEPEVT(stream)));
     HEPMC3_DEBUG(10, "deduce_reader: all attempts failed");
     return std::shared_ptr<Reader>(nullptr);
 }
@@ -241,48 +221,22 @@ std::shared_ptr<Reader> deduce_reader(std::shared_ptr<std::istream> stream)
         return std::shared_ptr<Reader>(nullptr);
     }
 
-    if ( strncmp(head.at(0).c_str(),"hmpb",4) == 0 )
-    {
-        return std::make_shared<ReaderPlugin>(*stream,libHepMC3protobufIO,std::string("newReaderprotobufstream"));
-    }
+    InputInfo input;
+    input.m_head=head;
+    input.classify();
 
-    if ( strncmp(head.at(0).c_str(), "HepMC::Version", 14) == 0 && strncmp(head.at(1).c_str(), "HepMC::Asciiv3", 14) == 0 )
-    {
-        HEPMC3_DEBUG(10, "Attempt ReaderAscii");
+    if (input.m_asciiv3) {
         return std::shared_ptr<Reader>((Reader*) ( new ReaderAscii(stream)));
     }
-
-    if ( strncmp(head.at(0).c_str(), "HepMC::Version",14) == 0 && strncmp(head.at(1).c_str(), "HepMC::IO_GenEvent", 18) == 0 )
-    {
-        HEPMC3_DEBUG(10, "Attempt ReaderAsciiHepMC2");
+    if ( input.m_iogenevent) {
         return std::shared_ptr<Reader>((Reader*) ( new ReaderAsciiHepMC2(stream)));
     }
-
-    if ( strncmp(head.at(0).c_str(), "<LesHouchesEvents", 17) == 0)
-    {
-        HEPMC3_DEBUG(10, "Attempt ReaderLHEF");
+    if ( input.m_lhef) {
         return std::shared_ptr<Reader>((Reader*) ( new ReaderLHEF(stream)));
     }
-    HEPMC3_DEBUG(10, "Attempt ReaderHEPEVT");
-    std::stringstream st_e(head.at(0).c_str());
-    char attr = ' ';
-    bool HEPEVT = true;
-    int m_i,m_p;
-    while (true)
-    {
-        if (!(st_e >> attr)) {
-            HEPEVT = false;
-            break;
-        }
-        if (attr == ' ') continue;
-        if (attr != 'E') {
-            HEPEVT = false;
-            break;
-        }
-        HEPEVT = static_cast<bool>(st_e >> m_i >> m_p);
-        break;
+    if ( input.m_hepevt)  {
+        return std::shared_ptr<Reader>((Reader*) ( new ReaderHEPEVT(stream)));
     }
-    if (HEPEVT) return std::shared_ptr<Reader>((Reader*) ( new ReaderHEPEVT(stream)));
     HEPMC3_DEBUG(10, "deduce_reader: all attempts failed");
     return std::shared_ptr<Reader>(nullptr);
 }
