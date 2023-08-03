@@ -40,7 +40,8 @@ inline std::shared_ptr<Reader> deduce_reader(const std::string &filename)
         return deduce_reader(std::shared_ptr< std::istream >(new ifstream(filename.c_str())));
     }
 #endif
-    return input.native_reader(std::string(filename));
+    std::string f = filename;
+    return input.native_reader(f);
 }
 }
 #endif
