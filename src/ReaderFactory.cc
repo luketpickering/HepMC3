@@ -13,23 +13,10 @@
 namespace HepMC3 {
 InputInfo::InputInfo (const std::string &filename) {
 
-    m_remote = false;
-    m_pipe = false;
-    m_error = false;
-    m_init = false;
-    m_root = false;
-    m_protobuf = false;
-    m_asciiv3 = false;
-    m_iogenevent = false;
-    m_lhef = false;
-    m_hepevt = false;
-
-
     if (filename.find("http://") != std::string::npos)    m_remote = true;
     if (filename.find("https://") != std::string::npos)   m_remote = true;
     if (filename.find("root://") != std::string::npos)    m_remote = true;
     if (filename.find("gsidcap://") != std::string::npos) m_remote = true;
-
 
     if (!m_remote)
     {
@@ -91,19 +78,19 @@ InputInfo::InputInfo (const std::string &filename) {
 void InputInfo::classify() {
 
     if ( strncmp(m_head.at(0).c_str(), "root", 4) == 0 ) m_root = true;
-    if ( strncmp(m_head.at(0).c_str(),"hmpb",4) == 0 ) m_protobuf = true;
-    if ( strncmp(m_head.at(0).c_str(),"HepMC::Version",14) == 0 && strncmp(m_head.at(1).c_str(), "HepMC::Asciiv3", 14) == 0 ) m_asciiv3=true;
-    if ( strncmp(m_head.at(0).c_str(),"HepMC::Version",14) == 0 && strncmp(m_head.at(1).c_str(), "HepMC::IO_GenEvent", 18) == 0 ) m_iogenevent=true;
+    if ( strncmp(m_head.at(0).c_str(), "hmpb", 4) == 0 ) m_protobuf = true;
+    if ( strncmp(m_head.at(0).c_str(), "HepMC::Version", 14) == 0 && strncmp(m_head.at(1).c_str(), "HepMC::Asciiv3", 14) == 0 ) m_asciiv3 = true;
+    if ( strncmp(m_head.at(0).c_str(), "HepMC::Version", 14) == 0 && strncmp(m_head.at(1).c_str(), "HepMC::IO_GenEvent", 18) == 0 ) m_iogenevent = true;
     if ( strncmp(m_head.at(0).c_str(), "<LesHouchesEvents", 17) == 0) m_lhef=true;
 
     std::stringstream st_e(m_head.at(0).c_str());
     char attr = ' ';
     bool HEPEVT = true;
-    int m_i,m_p;
+    int m_i, m_p;
     while (true)
     {
         if (!(st_e >> attr)) {
-            HEPEVT=false;
+            HEPEVT = false;
             break;
         }
         if (attr == ' ') continue;
@@ -111,10 +98,10 @@ void InputInfo::classify() {
             HEPEVT = false;
             break;
         }
-        HEPEVT=static_cast<bool>(st_e >> m_i >> m_p);
+        HEPEVT = static_cast<bool>(st_e >> m_i >> m_p);
         break;
     }
-    if (HEPEVT )m_hepevt=true;
+    if (HEPEVT) m_hepevt=true;
 
 }
 
@@ -157,25 +144,12 @@ std::shared_ptr<Reader> deduce_reader(std::istream &stream)
         return std::shared_ptr<Reader>(nullptr);
     }
     InputInfo input;
-    input.m_head=head;
+    input.m_head = head;
     input.classify();
     if (input.m_protobuf) {
-        return std::make_shared<ReaderPlugin>(stream,libHepMC3protobufIO,std::string("newReaderprotobuffile"));
+        return std::make_shared<ReaderPlugin>(stream,libHepMC3protobufIO,std::string("newReaderprotobufstream"));
     }
-    if (input.m_asciiv3) {
-        return std::shared_ptr<Reader>((Reader*) ( new ReaderAscii(stream)));
-    }
-    if ( input.m_iogenevent) {
-        return std::shared_ptr<Reader>((Reader*) ( new ReaderAsciiHepMC2(stream)));
-    }
-    if ( input.m_lhef) {
-        return std::shared_ptr<Reader>((Reader*) ( new ReaderLHEF(stream)));
-    }
-    if ( input.m_hepevt)  {
-        return std::shared_ptr<Reader>((Reader*) ( new ReaderHEPEVT(stream)));
-    }
-    HEPMC3_DEBUG(10, "deduce_reader: all attempts failed");
-    return std::shared_ptr<Reader>(nullptr);
+    return input.native_reader(stream);
 }
 /** @brief This function will deduce the type of input stream based on its content and will return appropriate Reader*/
 std::shared_ptr<Reader> deduce_reader(std::shared_ptr<std::istream> stream)
@@ -209,10 +183,10 @@ std::shared_ptr<Reader> deduce_reader(std::shared_ptr<std::istream> stream)
     head.push_back("");
     if (fstream)  {
         for (size_t i = 0; i < raw_header_size; ++i)  { static_cast<std::filebuf*>(fstream->rdbuf())->sungetc(); }
-        HEPMC3_DEBUG(10, "After sungetc() fstream->good()="+std::to_string(fstream->good()));
+        HEPMC3_DEBUG(10, "After sungetc() fstream->good()="+ std::to_string(fstream->good()));
     } else {
         for (size_t i = 0; i < raw_header_size; ++i)  { stream->rdbuf()->sungetc(); }
-        HEPMC3_DEBUG(10, "After sungetc() stream->good()="+std::to_string(stream->good()));
+        HEPMC3_DEBUG(10, "After sungetc() stream->good()="+ std::to_string(stream->good()));
     }
 
     if (!stream)
@@ -222,22 +196,11 @@ std::shared_ptr<Reader> deduce_reader(std::shared_ptr<std::istream> stream)
     }
 
     InputInfo input;
-    input.m_head=head;
+    input.m_head = head;
     input.classify();
-
-    if (input.m_asciiv3) {
-        return std::shared_ptr<Reader>((Reader*) ( new ReaderAscii(stream)));
+    if (input.m_protobuf) {
+        return std::make_shared<ReaderPlugin>(stream,libHepMC3protobufIO,std::string("newReaderprotobufspstream"));
     }
-    if ( input.m_iogenevent) {
-        return std::shared_ptr<Reader>((Reader*) ( new ReaderAsciiHepMC2(stream)));
-    }
-    if ( input.m_lhef) {
-        return std::shared_ptr<Reader>((Reader*) ( new ReaderLHEF(stream)));
-    }
-    if ( input.m_hepevt)  {
-        return std::shared_ptr<Reader>((Reader*) ( new ReaderHEPEVT(stream)));
-    }
-    HEPMC3_DEBUG(10, "deduce_reader: all attempts failed");
-    return std::shared_ptr<Reader>(nullptr);
+    return input.native_reader(stream);
 }
 }
