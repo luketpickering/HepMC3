@@ -320,8 +320,7 @@ bool ReaderAsciiHepMC2::read_event(GenEvent &evt) {
                 }
             }
         }
-    }    if (m_vertex_cache.empty()) {HEPMC3_DEBUG(1, "The first particle in event appears before the first vertex"); return -1;}
-
+    }
     std::shared_ptr<IntAttribute> signal_process_vertex_barcode = evt.attribute<IntAttribute>("signal_process_vertex");
     if (signal_process_vertex_barcode) {
         int signal_process_vertex_barcode_value = signal_process_vertex_barcode->value();
@@ -582,7 +581,7 @@ int ReaderAsciiHepMC2::parse_particle_information(const char *buf) {
         data_ghost->add_attribute("flows", std::make_shared<VectorIntAttribute>(vectorflows));
     }
     // Set prod_vtx link
-    if (m_vertex_cache.empty()) {HEPMC3_DEBUG(1, "The first particle in event appears before the first vertex"); rerurn -1;}
+    if (m_vertex_cache.empty()) {HEPMC3_DEBUG(1, "The first particle in event appears before the first vertex"); return -1;}
     if ( end_vtx == m_vertex_barcodes.back() ) {
         m_vertex_cache.back()->add_particle_in(data);
         end_vtx = 0;
