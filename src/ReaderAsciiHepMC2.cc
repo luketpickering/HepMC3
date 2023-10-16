@@ -320,7 +320,7 @@ bool ReaderAsciiHepMC2::read_event(GenEvent &evt) {
                 }
             }
         }
-    }    if (m_vertex_cache.empty()) {HEPMC3_DEBUG(1, "The first particle in event appears before the first vertex"); rerurn -1;}
+    }    if (m_vertex_cache.empty()) {HEPMC3_DEBUG(1, "The first particle in event appears before the first vertex"); return -1;}
 
     std::shared_ptr<IntAttribute> signal_process_vertex_barcode = evt.attribute<IntAttribute>("signal_process_vertex");
     if (signal_process_vertex_barcode) {
