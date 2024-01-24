@@ -3,6 +3,7 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS HepMC3.proto)
 set(HepMC3protobufIO_sources
   src/Writerprotobuf.cc
   src/Readerprotobuf.cc
+  src/protobufUtils.cc
   ${PROTO_SRCS})
 
 #---Define dynamic library---------------------------------------------------
