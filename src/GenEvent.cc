@@ -69,7 +69,27 @@ GenEvent::GenEvent(const GenEvent&e) {
         GenEventData tdata;
         e.write_data(tdata);
         read_data(tdata);
+        m_run_info = e.m_run_info;
     }
+}
+
+GenEvent::GenEvent(GenEvent &&e) {
+  if (this != &e)
+  {
+      std::lock(m_lock_attributes, e.m_lock_attributes);
+      std::lock_guard<std::recursive_mutex> lhs_lk(m_lock_attributes, std::adopt_lock);
+      std::lock_guard<std::recursive_mutex> rhs_lk(e.m_lock_attributes, std::adopt_lock);
+
+      m_particles = std::move(e.m_particles);
+      m_vertices = std::move(e.m_vertices);
+      m_event_number = std::move(e.m_event_number);
+      m_weights = std::move(e.m_weights);
+      m_momentum_unit = std::move(e.m_momentum_unit);
+      m_length_unit = std::move(e.m_length_unit);
+      m_rootvertex = std::move(e.m_rootvertex);
+      m_run_info = std::move(e.m_run_info);
+      m_attributes = std::move(e.m_attributes);
+  }
 }
 
 GenEvent::~GenEvent() {
@@ -89,8 +109,29 @@ GenEvent& GenEvent::operator=(const GenEvent& e) {
         GenEventData tdata;
         e.write_data(tdata);
         read_data(tdata);
+        m_run_info = e.m_run_info;
     }
     return *this;
+}
+
+GenEvent&  GenEvent::operator=(GenEvent &&e) {
+  if (this != &e)
+  {
+      std::lock(m_lock_attributes, e.m_lock_attributes);
+      std::lock_guard<std::recursive_mutex> lhs_lk(m_lock_attributes, std::adopt_lock);
+      std::lock_guard<std::recursive_mutex> rhs_lk(e.m_lock_attributes, std::adopt_lock);
+
+      m_particles = std::move(e.m_particles);
+      m_vertices = std::move(e.m_vertices);
+      m_event_number = std::move(e.m_event_number);
+      m_weights = std::move(e.m_weights);
+      m_momentum_unit = std::move(e.m_momentum_unit);
+      m_length_unit = std::move(e.m_length_unit);
+      m_rootvertex = std::move(e.m_rootvertex);
+      m_run_info = std::move(e.m_run_info);
+      m_attributes = std::move(e.m_attributes);
+  }
+  return *this;
 }
 
 

@@ -56,11 +56,17 @@ public:
     /// @brief Copy constructor
     GenEvent(const GenEvent&);
 
+    /// @brief Move constructor
+    GenEvent(GenEvent&&);
+
     /// @brief Destructor
     ~GenEvent();
 
-    /// @brief Assignment operator
+    /// @brief Copy Assignment operator
     GenEvent& operator=(const GenEvent&);
+
+    /// @brief Move Assignment operator
+    GenEvent& operator=(GenEvent&&);
 
     /// @name Particle and vertex access
     /// @{
