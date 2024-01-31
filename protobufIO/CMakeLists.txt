@@ -47,6 +47,7 @@ install(FILES
           ${PROTO_HDRS}
           ${CMAKE_CURRENT_SOURCE_DIR}/include/HepMC3/Writerprotobuf.h
           ${CMAKE_CURRENT_SOURCE_DIR}/include/HepMC3/Readerprotobuf.h
+          ${CMAKE_CURRENT_SOURCE_DIR}/include/HepMC3/protobufUtils.h
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/HepMC3
   COMPONENT protobufIOdevel)
 
