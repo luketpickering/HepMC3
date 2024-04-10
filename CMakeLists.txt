@@ -297,7 +297,7 @@ if(ROOT_FOUND)
    list(APPEND HEPMC3_COMPONENTS "rootIO")
 endif()
 
-if(Protobuf_FOUND)
+if(Protobuf_FOUND AND HEPMC3_ENABLE_PROTOBUFIO)
   add_subdirectory(protobufIO)
   list(APPEND HEPMC3_FEATURES "protobufIO")
   list(APPEND HEPMC3_FEATURES "protobufIO${Protobuf_VERSION}")
